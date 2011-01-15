@@ -301,7 +301,7 @@ v4l_service_save(service_t *t)
 static int
 v4l_service_quality(service_t *t)
 {
-  return 100;
+  return 80;
 }
 
 
