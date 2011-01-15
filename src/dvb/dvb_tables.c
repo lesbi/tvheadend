@@ -541,6 +541,10 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
     return 0;
 
+  /* ignore EIT information if the channel is mapped to xmltv */
+  if (ch->ch_xc)
+    return 0;
+
   while(len >= 12) {
     event_id                  = ptr[0] << 8 | ptr[1];
     start_time                = dvb_convert_date(&ptr[2]);
