@@ -121,7 +121,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
     return -1;
 
   default:
-    ic = convert_latin1;
+    ic = convert_iso_8859[1];
     break;
   }
 
