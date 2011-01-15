@@ -19,6 +19,7 @@ tvheadend.epgDetails = function(event) {
     content += '<div class="x-epg-desc">' + event.episode + '</div>';
     content += '<div class="x-epg-desc">' + event.description + '</div>';
 
+    content += '<div class="x-epg-meta">' + event.category + '</div>';
     content += '<div class="x-epg-meta">' + event.contentgrp + '</div>';
 
     if(event.ext_desc != null)
@@ -134,6 +135,7 @@ tvheadend.epg = function() {
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'duration'},
+	    {name: 'category'},
 	    {name: 'contentgrp'},
 	    {name: 'schedstate'}
 	])
@@ -220,6 +222,12 @@ tvheadend.epg = function() {
 	    renderer: renderText
 	},{
 	    width: 250,
+	    id:'category',
+	    header: "Category",
+	    dataIndex: 'category',
+	    renderer: renderText
+	},{
+	    width: 250,
 	    id:'contentgrp',
 	    header: "Content Type",
 	    dataIndex: 'contentgrp',
@@ -232,7 +240,14 @@ tvheadend.epg = function() {
 
     var epgFilterTitle = new Ext.form.TextField({
 	emptyText: 'Search title...',
-	width: 200
+	width: 160
+    });
+
+    // Category search box
+
+    var epgFilterCategory = new Ext.form.TextField({
+	emptyText: 'Search category...',
+	width: 160
     });
 
 
@@ -240,7 +255,7 @@ tvheadend.epg = function() {
 
     var epgFilterChannels = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
-	width: 200,
+	width: 160,
 	displayField:'name',
 	store: tvheadend.channels,
 	mode: 'local',
@@ -252,7 +267,7 @@ tvheadend.epg = function() {
     // Tags, uses global store
 
     var epgFilterChannelTags = new Ext.form.ComboBox({
-	width: 200,
+	width: 160,
 	displayField:'name',
 	store: tvheadend.channelTags,
 	mode: 'local',
@@ -266,7 +281,7 @@ tvheadend.epg = function() {
 
     var epgFilterContentGroup = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
-	width: 200,
+	width: 160,
 	displayField:'name',
 	store: tvheadend.ContentGroupStore,
 	mode: 'local',
@@ -279,6 +294,7 @@ tvheadend.epg = function() {
     function epgQueryClear() {
 	epgStore.baseParams.channel    = null;
 	epgStore.baseParams.tag        = null;
+	epgStore.baseParams.category   = null;
 	epgStore.baseParams.contentgrp = null;
 	epgStore.baseParams.title      = null;
 
@@ -286,6 +302,7 @@ tvheadend.epg = function() {
 	epgFilterChannelTags.setValue("");
 	epgFilterContentGroup.setValue("");
 	epgFilterTitle.setValue("");
+	epgFilterCategory.setValue("");
           
 	epgStore.reload();
     }
@@ -323,6 +340,18 @@ tvheadend.epg = function() {
 	}
     });
 
+    epgFilterCategory.on('valid', function(c) {
+	var value = c.getValue();
+
+	if(value.length < 1)
+	    value = null;
+
+	if(epgStore.baseParams.category != value) {
+	    epgStore.baseParams.category = value;
+	    epgStore.reload();
+	}
+    });
+
     var epgView = new Ext.ux.grid.livegrid.GridView({
 	nearLimit : 100,
 	loadMask  : {
@@ -345,6 +374,8 @@ tvheadend.epg = function() {
 	    epgFilterChannels,
 	    '-',
 	    epgFilterChannelTags,
+	    '-',
+	    epgFilterCategory,
 	    '-',
 	    epgFilterContentGroup,
 	    '-',
@@ -399,6 +430,8 @@ tvheadend.epg = function() {
 	    epgStore.baseParams.channel    : "<i>Don't care</i>";
 	var tag = epgStore.baseParams.tag ?
 	    epgStore.baseParams.tag        : "<i>Don't care</i>";
+	var category = epgStore.baseParams.category ?
+	    epgStore.baseParams.category : "<i>Don't care</i>";
 	var contentgrp = epgStore.baseParams.contentgrp ?
 	    epgStore.baseParams.contentgrp : "<i>Don't care</i>";
 
@@ -410,6 +443,7 @@ tvheadend.epg = function() {
 			       '<div class="x-smallhdr">Title:</div>' + title + '<br>' +
 			       '<div class="x-smallhdr">Channel:</div>' + channel + '<br>' +
 			       '<div class="x-smallhdr">Tag:</div>' + tag + '<br>' +
+			       '<div class="x-smallhdr">Category:</div>' + category + '<br>' +
 			       '<div class="x-smallhdr">Content Group:</div>' + contentgrp + '<br>' +
 			       '<br>' +
 			       'Currently this will match (and record) ' + 

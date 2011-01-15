@@ -98,6 +98,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
     return 0;
   }
 
+  if(dae->dae_category != NULL) {
+    if(e->e_category == NULL ||
+       regexec(&dae->dae_category_preg, e->e_category, 0, NULL, 0))
+    return 0;
+  }
+
   if(dae->dae_approx_time != 0) {
     struct tm a_time;
     struct tm ev_time;
@@ -175,6 +181,11 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
     regfree(&dae->dae_title_preg);
   }
 
+  if(dae->dae_category != NULL) {
+    free(dae->dae_category);
+    regfree(&dae->dae_category_preg);
+  }
+
   if(dae->dae_channel != NULL)
     LIST_REMOVE(dae, dae_channel_link);
 
@@ -240,6 +251,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
+
+  htsmsg_add_str(e, "category", dae->dae_category ?: "");
 
   htsmsg_add_u32(e, "contenttype",dae->dae_content_type);
 
@@ -338,6 +351,19 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
+  if((s = htsmsg_get_str(values, "category")) != NULL) {
+    if(dae->dae_category != NULL) {
+      free(dae->dae_category);
+      dae->dae_category = NULL;
+      regfree(&dae->dae_category_preg);
+    }
+
+    if(!regcomp(&dae->dae_category_preg, s,
+		REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+      dae->dae_category = strdup(s);
+    }
+  }
+
   if((s = htsmsg_get_str(values, "tag")) != NULL) {
     if(dae->dae_channel_tag != NULL) {
       LIST_REMOVE(dae, dae_channel_tag_link);
@@ -424,7 +450,7 @@ dvr_autorec_init(void)
 void
 dvr_autorec_add(const char *config_name,
                 const char *title, const char *channel,
-		const char *tag, uint8_t content_type,
+		const char *tag, const char *category, uint8_t content_type,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
@@ -448,6 +474,12 @@ dvr_autorec_add(const char *config_name,
      !regcomp(&dae->dae_title_preg, title,
 	      REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
     dae->dae_title = strdup(title);
+  }
+
+  if(category != NULL &&
+     !regcomp(&dae->dae_category_preg, category,
+	      REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+    dae->dae_category = strdup(category);
   }
 
   if(tag != NULL && (ct = channel_tag_find_by_name(tag, 0)) != NULL) {

@@ -47,6 +47,7 @@ typedef struct event {
   uint32_t e_id;
 
   uint8_t e_content_type;
+  char *e_category;/* UTF-8 encoded */
 
   time_t e_start;  /* UTC time */
   time_t e_stop;   /* UTC time */
@@ -98,6 +99,9 @@ int epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
 int epg_event_set_content_type(event_t *e, uint8_t type)
        __attribute__ ((warn_unused_result));
 
+int epg_event_set_category(event_t *e, const char *category)
+       __attribute__ ((warn_unused_result));
+
 int epg_event_set_episode(event_t *e, epg_episode_t *ee)
        __attribute__ ((warn_unused_result));
 
@@ -130,9 +134,10 @@ typedef struct epg_query_result {
 } epg_query_result_t;
 
 void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-                uint8_t type, const char *title);
+                uint8_t type, const char *title, const char *category);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title);
+	       const char *contentgroup, const char *title, 
+               const char *category);
 void epg_query_free(epg_query_result_t *eqr);
 void epg_query_sort(epg_query_result_t *eqr);
 

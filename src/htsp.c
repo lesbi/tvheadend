@@ -642,6 +642,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out, *eventIds;
   const char *query;
+  const char *contentCategory;
   int c, i;
   uint32_t channelid, tagid, epg_content_dvbcode = 0;
   channel_t *ch = NULL;
@@ -651,6 +652,8 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   //only mandatory parameter is the query
   if( (query = htsmsg_get_str(in, "query")) == NULL )
     return htsp_error("Missing argument 'query'");
+
+  contentCategory = htsmsg_get_str(in, "contentCategory");
   
   if( !(htsmsg_get_u32(in, "channelId", &channelid)) )
     ch = channel_find_by_identifier(channelid);
@@ -661,7 +664,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_get_u32(in, "contentType", &epg_content_dvbcode);
 
   //do the query
-  epg_query0(&eqr, ch, ct, epg_content_dvbcode, query);
+  epg_query0(&eqr, ch, ct, epg_content_dvbcode, query, contentCategory);
   c = eqr.eqr_entries;
 
   // create reply

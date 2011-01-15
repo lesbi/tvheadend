@@ -256,7 +256,8 @@ dvr_entry_create(const char *config_name,
                  channel_t *ch, time_t start, time_t stop, 
 		 const char *title, const char *description,
 		 const char *creator, dvr_autorec_entry_t *dae,
-		 epg_episode_t *ee, uint8_t content_type, dvr_prio_t pri)
+		 epg_episode_t *ee, const char *category,
+                 uint8_t content_type, dvr_prio_t pri)
 {
   dvr_entry_t *de;
   char tbuf[30];
@@ -297,6 +298,9 @@ dvr_entry_create(const char *config_name,
     tvh_str_set(&de->de_episode.ee_onscreen, ee->ee_onscreen);
   }
 
+  if(category)
+    de->de_category = strdup(category);
+
   de->de_content_type = content_type;
 
   dvr_entry_link(de);
@@ -334,7 +338,7 @@ dvr_entry_create_by_event(const char *config_name,
   return dvr_entry_create(config_name,
                           e->e_channel, e->e_start, e->e_stop, 
 			  e->e_title, e->e_desc, creator, dae, &e->e_episode,
-			  e->e_content_type, pri);
+			  e->e_category, e->e_content_type, pri);
 }
 
 
@@ -414,7 +418,7 @@ static void
 dvr_db_load_one(htsmsg_t *c, int id)
 {
   dvr_entry_t *de;
-  const char *s, *title, *creator;
+  const char *s, *title, *creator, *category;
   channel_t *ch;
   uint32_t start, stop;
   int d;
@@ -438,6 +442,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   if((creator = htsmsg_get_str(c, "creator")) == NULL)
     return;
+
+  category = htsmsg_get_str(c, "category");
 
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = id;
@@ -489,6 +495,9 @@ dvr_db_load_one(htsmsg_t *c, int id)
     de->de_episode.ee_episode = d;
   if(!htsmsg_get_s32(c, "part", &d))
     de->de_episode.ee_part = d;
+
+  if(category)
+    de->de_category = strdup(category);
 
   de->de_content_type = htsmsg_get_u32_or_default(c, "contenttype", 0);
 
@@ -569,6 +578,9 @@ dvr_entry_save(dvr_entry_t *de)
     htsmsg_add_u32(m, "part", de->de_episode.ee_part);
   if(de->de_episode.ee_onscreen)
     htsmsg_add_str(m, "episodename", de->de_episode.ee_onscreen);
+
+  if(de->de_category)
+    htsmsg_add_str(m, "category", de->de_category);
 
   if(de->de_content_type)
     htsmsg_add_u32(m, "contenttype", de->de_content_type);

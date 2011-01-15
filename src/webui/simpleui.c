@@ -86,7 +86,7 @@ page_simple(http_connection_t *hc,
 
   if(s != NULL) {
     
-    epg_query(&eqr, NULL, NULL, NULL, s);
+    epg_query(&eqr, NULL, NULL, NULL, s, NULL);
     epg_query_sort(&eqr);
 
     c = eqr.eqr_entries;

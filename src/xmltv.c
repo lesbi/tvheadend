@@ -507,6 +507,8 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
       uint8_t type = epg_content_group_find_by_name(category);
       if(type)
 	changed |= epg_event_set_content_type(e, type);
+      else
+        changed |= epg_event_set_category(e, category);
     }
 
     changed |= epg_event_set_episode(e, &episode);

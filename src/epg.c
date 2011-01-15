@@ -241,6 +241,20 @@ epg_event_set_content_type(event_t *e, uint8_t type)
   return 1;
 }
 
+/**
+ *
+ */
+int
+epg_event_set_category(event_t *e, const char *category)
+{
+  if(e->e_category != NULL && !strcmp(e->e_category,category))
+    return 0;
+
+  free(e->e_category);
+  e->e_category = strdup(category);
+  return 1;
+}
+
 
 /**
  *
@@ -729,12 +743,17 @@ epg_save(void)
  *
  */
 static void
-eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
+eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg_title,
+        regex_t *preg_category, time_t now)
 {
   if(e->e_title == NULL)
     return;
 
-  if(preg != NULL && regexec(preg, e->e_title, 0, NULL, 0))
+  if(preg_title != NULL && regexec(preg_title, e->e_title, 0, NULL, 0))
+    return;
+
+  if(preg_category != NULL && 
+      regexec(preg_category, e->e_category ? e->e_category : "", 0, NULL, 0))
     return;
 
   if(e->e_stop < now)
@@ -756,17 +775,18 @@ eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
  */
 static void
 epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
-		      uint8_t content_type, regex_t *preg, time_t now)
+		      uint8_t content_type, regex_t *preg_title,
+                      regex_t *preg_category, time_t now)
 {
   event_t *e;
 
   if(content_type == 0) {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
-      eqr_add(eqr, e, preg, now);
+      eqr_add(eqr, e, preg_title, preg_category, now);
   } else {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
       if(content_type == e->e_content_type)
-	eqr_add(eqr, e, preg, now);
+	eqr_add(eqr, e, preg_title, preg_category, now);
   }
 }
 
@@ -775,38 +795,51 @@ epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
  */
 void
 epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-           uint8_t content_type, const char *title)
+           uint8_t content_type, const char *title, 
+           const char *category)
 {
   channel_tag_mapping_t *ctm;
   time_t now;
-  regex_t preg0, *preg;
+  regex_t preg0_title, *preg_title;
+  regex_t preg0_category, *preg_category;
 
   lock_assert(&global_lock);
   memset(eqr, 0, sizeof(epg_query_result_t));
   time(&now);
 
   if(title != NULL) {
-    if(regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    if(regcomp(&preg0_title, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
       return;
-    preg = &preg0;
+    preg_title = &preg0_title;
   } else {
-    preg = NULL;
+    preg_title = NULL;
+  }
+
+  if(category != NULL) {
+    if(regcomp(&preg0_category, category, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+      return;
+    preg_category = &preg0_category;
+  } else {
+    preg_category = NULL;
   }
 
   if(ch != NULL && ct == NULL) {
-    epg_query_add_channel(eqr, ch, content_type, preg, now);
+    epg_query_add_channel(eqr, ch, content_type, preg_title, 
+        preg_category, now);
     return;
   }
   
   if(ct != NULL) {
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ch == NULL || ctm->ctm_channel == ch)
-	epg_query_add_channel(eqr, ctm->ctm_channel, content_type, preg, now);
+	epg_query_add_channel(eqr, ctm->ctm_channel, content_type, preg_title, 
+            preg_category, now);
     return;
   }
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-    epg_query_add_channel(eqr, ch, content_type, preg, now);
+    epg_query_add_channel(eqr, ch, content_type, preg_title, 
+        preg_category, now);
 }
 
 /**
@@ -814,13 +847,13 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
  */
 void
 epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	  const char *contentgroup, const char *title)
+	  const char *contentgroup, const char *title, const char *category)
 {
   channel_t *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag ? channel_tag_find_by_name(tag, 0) : NULL;
   uint8_t content_type = contentgroup ? 
     epg_content_group_find_by_name(contentgroup) : 0;
-  epg_query0(eqr, ch, ct, content_type, title);
+  epg_query0(eqr, ch, ct, content_type, title, category);
 }
 
 /**

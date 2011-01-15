@@ -665,6 +665,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *channel = http_arg_get(&hc->hc_req_args, "channel");
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
   const char *cgrp    = http_arg_get(&hc->hc_req_args, "contentgrp");
+  const char *category= http_arg_get(&hc->hc_req_args, "category");
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
 
   if(channel && !channel[0]) channel = NULL;
@@ -683,7 +684,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, cgrp, title);
+  epg_query(&eqr, channel, tag, cgrp, title, category);
 
   epg_query_sort(&eqr);
 
@@ -732,6 +733,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     
     if((s = epg_content_group_get_name(e->e_content_type)) != NULL)
       htsmsg_add_str(m, "contentgrp", s);
+
+    if(e->e_category != NULL)
+      htsmsg_add_str(m, "category", e->e_category);
 
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
@@ -859,7 +863,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create(config_name,
                      ch, start, stop, title, NULL, hc->hc_representative, 
-		     NULL, NULL, 0, dvr_pri2val(pri));
+		     NULL, NULL, NULL, 0, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -873,6 +877,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
                     http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
+                    http_arg_get(&hc->hc_req_args, "category"),
 		    cgrp ? epg_content_group_find_by_name(cgrp) : 0,
 		    hc->hc_representative, "Created from EPG query");
 

@@ -457,6 +457,10 @@ tvheadend.autoreceditor = function() {
 		emptyText: 'Only include tag...'
 	    })
 	},{
+	    header: "Category (Regexp)",
+	    dataIndex: 'category',
+	    editor: new fm.TextField({allowBlank: true})
+	},{
 	    header: "Content Group",
 	    dataIndex: 'contentgrp',
 	    editor: new Ext.form.ComboBox({
@@ -622,8 +626,8 @@ tvheadend.dvr = function() {
 
     
     tvheadend.autorecRecord = Ext.data.Record.create([
-	'enabled','title','channel','tag','creator','contentgrp','comment',
-	'weekdays', 'pri', 'approx_time', 'config_name'
+	'enabled','title','channel','tag','creator','category','contentgrp',
+        'comment','weekdays', 'pri', 'approx_time', 'config_name'
     ]);
     
 
