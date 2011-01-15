@@ -190,13 +190,13 @@ tvheadend.epg = function() {
 	    dataIndex: 'title',
 	    renderer: renderText
 	},{
-	    width: 100,
+	    width: 200,
 	    id:'episode',
 	    header: "Episode",
 	    dataIndex: 'episode',
 	    renderer: renderText
 	},{
-	    width: 100,
+	    width: 120,
 	    id:'start',
 	    header: "Start",
 	    dataIndex: 'start',
@@ -215,19 +215,19 @@ tvheadend.epg = function() {
 	    dataIndex: 'duration',
 	    renderer: renderDuration
 	},{
-	    width: 250,
+	    width: 100,
 	    id:'channel',
 	    header: "Channel",
 	    dataIndex: 'channel',
 	    renderer: renderText
 	},{
-	    width: 250,
+	    width: 180,
 	    id:'category',
 	    header: "Category",
 	    dataIndex: 'category',
 	    renderer: renderText
 	},{
-	    width: 250,
+	    width: 180,
 	    id:'contentgrp',
 	    header: "Content Type",
 	    dataIndex: 'contentgrp',

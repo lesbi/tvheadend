@@ -193,7 +193,7 @@ tvheadend.dvrschedule = function() {
 	    header: "Title",
 	    dataIndex: 'title'
 	},{
-	    width: 100,
+	    width: 200,
 	    id:'episode',
 	    header: "Episode",
 	    dataIndex: 'episode'
@@ -204,13 +204,13 @@ tvheadend.dvrschedule = function() {
 	    dataIndex: 'pri',
 	    renderer: renderPri
 	},{
-	    width: 100,
+	    width: 120,
 	    id:'start',
 	    header: "Start",
 	    dataIndex: 'start',
 	    renderer: renderDate
 	},{
-	    width: 100,
+	    width: 120,
 	    hidden:true,
 	    id:'end',
 	    header: "End",
@@ -223,7 +223,7 @@ tvheadend.dvrschedule = function() {
 	    dataIndex: 'duration',
 	    renderer: renderDuration
 	},{
-	    width: 250,
+	    width: 100,
 	    id:'channel',
 	    header: "Channel",
 	    dataIndex: 'channel'
